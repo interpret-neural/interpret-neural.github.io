@@ -1,4 +1,4 @@
-Hello and welcome to blog 
+Hello and welcome to this blog
 on
 interpretability of neural networks for natural language processing
 of the
