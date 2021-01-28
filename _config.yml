@@ -6,8 +6,8 @@
 # https://learn-the-web.algonquindesign.ca/topics/markdown-yaml-cheat-sheet/#yaml
 # https://learnxinyminutes.com/docs/yaml/
 
-title: Interpretability of Neural Networks for Natural Language Processing
-description: This Blog focuses on interpretability of neural network models for natural language processing.
+title: Interpretability of Neural Networks for NLP
+description: A blog on interpretability of neural network models for natural language processing
 github_username: interpret-neural
 
 # Email and twitter are optional:
