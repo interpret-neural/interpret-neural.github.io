@@ -1,9 +1,14 @@
-# Your blog
+# Interpretability of neural networks for natural language processing blog
 
-Welcome to the home page of the blog on
-interpretability of neural networks for natural language processing
-of the
-SFI Frontiers for the Future Programme
-“Rolling in the deep: unravelling a neural net’s capacity for language”
-in the School of Computing
-at Dublin City University.
+This is the source file repository for the blog on
+https://interpret-neural.github.io/
+
+You can report technical issues and simple errors, e.g. spelling errors,
+on the issue tab and propose changes via pull requests.
+The repository is probably not the right space to disucss the 
+blog's contents.
+
+If you would like to contribute
+a post please get in contact first with your idea to check whether
+we are happy to consider your guest contribution.
+
