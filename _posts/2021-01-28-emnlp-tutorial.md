@@ -1,0 +1,152 @@
+# This is the title
+
+Here's the table of contents:
+
+1. TOC
+{:toc}
+
+<!-----
+Conversion notes:
+* Docs to Markdown version 1.0β29
+* Thu Jan 28 2021 07:48:11 GMT-0800 (PST)
+* Source doc: emnlp-2020-tutorial-notes
+----->
+
+
+## Model-agnostic Methods for Understanding Model Behaviour
+
+In this post, I give an overview of the tutorial on [Interpreting Predictions of NLP Models](https://github.com/Eric-Wallace/interpretability-tutorial-emnlp2020/) by [Eric Wallace](http://ericswallace.com/), [Matt Gardner](https://matt-gardner.github.io/) and [Sameer Singh](https://sameersingh.org/) based on watching the [tutorial video](https://www.youtube.com/watch?v=gprIzglUW1s) (4h27). I hope this adds a useful introduction to interpretability that can be read separately from the [tutorial description](https://www.aclweb.org/anthology/2020.emnlp-tutorials.3/) and [slides](https://github.com/Eric-Wallace/interpretability-tutorial-emnlp2020/).
+
+
+### Overview
+
+Interpretability is concerned with methods for understanding better the brittleness of our models (what are their failures?, what can go wrong?) in detail not covered by standard evaluation metrics. A better understanding of the reasons why a model makes certain predictions can lead to improved models, cleaner or more appropriate training data and an indication of how much the predictions can be trusted. Furthermore, there is the hypothesis that understandable models generalise better.
+
+The EMNLP 2020 tutorial on interpretability focuses on three types of model-agnostic interpretation methods, each trying to answer a different question:
+
+1. What parts of an input led to a prediction?
+2. What triggers exist that, if present in the input, always cause a particular prediction?
+3. What training examples “caused” a prediction, i.e. have a strong influence on the prediction?
+
+The tutorial’s overview also briefly talks about methods that
+
+*   probe the internal representations of a neural network
+*   use challenge/diagnostic test sets
+
+and refers to the [ACL 2020 tutorial on Interpretability and Analysis in Neural NLP](https://www.aclweb.org/anthology/2020.acl-tutorials.1/)  for a discussion of these methods. Furthermore, methods for “baking interpretability into a model” are mentioned, such as jointly predicting a label and a human-readable explanation. While a generated explanation has no guarantee that it explains a prediction made in parallel, it may feed into a second model or its claims and rationale may be checked by a person as a starting point for making a decision (there is still always a risk that the user of an interpretation is misled by a superficially plausible explanation).
+
+
+### Methods
+
+
+#### What parts of an input led to a prediction?
+
+
+
+1. **Gradient-based saliency maps**: How big is the effect of a small change of the input on the output?
+    1. Usually there is no effect on the final discrete output and one needs to look at numeric information near the output layer of the neural model. The loss function used in training is a suitable measure as it accesses this information and can detect small changes.
+    2. Does not work well in practice.
+    3. Address gradient noise by averaging over the gradient of points near the input point or points on the line connecting the input point and the origin.
+    4. Answers different questions than attention-based saliency maps, see papers [Attention is not explanation](https://www.aclweb.org/anthology/N19-1357/) and [Attention is not not explanation](https://www.aclweb.org/anthology/D19-1002/). Furthermore, gradient-based saliency maps can be produced also for neural networks that do not use attention mechanisms.
+2. **Input-perturbation-based saliency maps**: How big is the effect of dropping or replacing one or more input words on the output?
+    5. Dropping one word may not be enough to strongly affect the output, e.g. consider an input to a sentiment polarity predictor that contains two negative words, e.g. “_The movie was mediocre, maybe even bad_.” (as opposed to a double negative like “_I wouldn’t recommend you not going to see this movie_”). If one of the negative words is dropped, there still is a strong negative signal from the other negative word, 
+    6. Number of all possible combinations of words that could be dropped is often too high.
+    7. Black-box approach: Fit linear model to observed input/output pairs. I understood this to mean that each perturbed input is represented as a binary vector indicating which tokens are kept and that the new linear model is fit to replicate the predictions of the model being analysed. The linear model assigns a single value to each binary indicator variable that then can be used in a salience map. As the number of perturbations that are quite distant from the test item (the item for which we want to produce a salience map) can be much greater than the number of perturbations with high similarity to the test item, data points are weighted according to the similarity to the test item. 
+    8. Popular tool: LIME [https://github.com/marcotcr/lime](https://github.com/marcotcr/lime) (Ribeiro et al. 2016)
+3. **Reduced input as explanations**: Prune input string (remove words) without changing the prediction.
+    9. Assumption: Words that must be kept in the input are the important words.
+    10. Iteratively remove the least “important” word
+    11. Tends to heavily prune the input text, hard to interpret
+    12. “Minimal string with the same output” was mentioned. (Q: What if the greedy search failed to find a substring of minimal length?)
+4. **Adversarial perturbations as explanations**: Find some near examples that receive a deviating prediction.
+    13. Tends to find minor input changes that are nonsensical or are too specific to the test item, e.g. an example of the former is the replacement of “tony” with the arbitrary word “cookie-cutter” in a movie review describing its stunts as being “tony hawk-style”.
+    14. Sometimes helpful explanations are found, e.g. replacing “doctor” with “woman” in a cloze test looking for a pronoun.
+    15. Rarely actionable.
+
+
+#### What anchors or triggers exist that, if present in the input, always cause a particular prediction?
+
+
+
+5. **Anchors:** Extract decision rules to describe the model’s behaviour restricted to a tiny subset of the input space.
+    16. Define a perturbation distribution to generate examples similar or near to the test item.
+    17. Look for discriminative and widely present words or other “anchors” in the input that influence the output
+    18. Extend list of candidate anchors, e.g. n-grams with increasing n, until a precision threshold is reached.
+    19. Produces local decision rules that apply only to examples similar to the test item.
+6. **Universal adversarial triggers**: Find a phrase that when inserted into any input usually triggers a specific prediction.
+    20. Global, i.e. not focused on specific examples.
+    21. Can be found with gradient descent, holding all network weights and input embeddings fixed and adding new tunable components for the trigger phrase. 
+    22. Modify search to make triggers more grammatical and/or fit the domain.
+    23. Not important where the phrase is inserted, at least for debugging models or datasets.
+    24. Triggers may simply be good features given the data but we want the model to focus on other content more.
+
+
+#### Which training items caused the prediction?
+
+Identify the training items that were most useful or most needed for the given training process to  make the prediction. Score each training item by how much it influences the prediction. → Can point to issues with the data. --> Actionable.
+
+Two methods are described in this section:
+
+
+
+7. **What training items, if removed, would change the prediction?**
+    25. Measure effect on prediction via loss function
+    26. Naive approach: Remove and train from scratch (or continue training) → Use approximation methods to estimate influence (still slow for large datasets or large models)
+8. **Representer point selection **
+    27. Applicable if the output of the model is a scalar, e.g. in {0, 1}
+    28. Use the N training items and the representation learned by the neural network to embed any input item into an N-dimensional space, each component recording  the similarity to a specific training item. Then train a linear regression model to replicate the input/output behaviour of the given model. Use the product of the i-th coefficient and the similarity of a test item to the i-th training item as an indicator.
+    29. Can also find opposing training items, i.e. training items that are similar to the test item and therefore should influence the prediction but have a deviant label. The presence of such items should mean that the model is less confident about its prediction.
+
+
+### How to Implement Interpretation Methods Yourself
+
+The last part of the tutorial focuses on how to implement the first two types of interpretability methods, rather than trying to work with existing tools. Data influence is not covered. There is a lot of code available. However, according to the tutorial, it is easy to implement the methods yourself, giving you maximum flexibility and no need to understand someone else’s interface.
+
+
+#### Implementing Blackbox Methods
+
+For blackbox methods, the tutorial only discusses the need to write a function that generates perturbed examples. No suggestions or pseudo code are provided for other steps such as searching for minimal substrings with the same prediction or nearest examples with a different prediction and measuring the ability of candidate anchors to discriminate the target classes.
+
+
+#### Implementing Gradient-based Methods
+
+The implementation of gradient-based methods is discussed in more detail. First, a function is needed that labels an example using the model (or using a given target label, e.g. for finding adversarial examples that are similar to the example and are assigned a given label). This function may have to be extended to produce multiple labelled examples for each thing of interest, e.g. named entities in a sentence. In this case, it will also be necessary to add a mask to remove the other items from the loss calculation so that their loss is not measured as well. Second, a function is needed to obtain the gradients for a labelled example. This function temporarily adds a backward hook to the embedding layer to collect the gradients. To average over multiple inputs to address gradient noise, a forward hook can make the necessary modifications to the embedding layer outputs. For further inspiration how to implement specific methods, the tutorial points to various code repositories.
+
+
+### Open Problems
+
+
+#### Defining Interpretability
+
+The tutorial suggests starting with a goal, i.e. what to use interpretation for. Different goals will lead to different definitions of interpretability. It can also be decided that a project does not require interpretability, e.g. when test set accuracy is well aligned with project objectives.
+
+
+#### Faithfulness of Interpretations
+
+Most interpretability methods are not causal, i.e. they do not accurately reflect the reasons why a prediction was made.
+
+*   There are examples where interpretations ignore the model and are just highlighting prominent features of the input, e.g. edges in images.
+*   Methods based on approximations may not work well for certain model architectures. It is necessary to check that the interpretations produced by an approximation method correlates well with the interpretations of the exact (but slower) variant of the method.
+*   Interpretability methods can be unstable, i.e. overly sensitive to changes that should be irrelevant. For example, a saliency map can change substantially for a small change in the input.
+*   Interpretability methods can be manipulated, e.g. a model can be designed to have a low gradient for an input feature so that a gradient-based salience map does not show this input feature as important while still basing its prediction mostly on this feature.
+
+
+#### Evaluating Interpretations
+
+It is a good idea to systematically test whether interpretations are useful to people in a real-world context. Furthermore, planning a human evaluation requires finding use cases for the interpretations and helps in clearly defining the goals of interpretability in a project. Human evaluations so far show some impressive successes but also failures caused by misleading information and information overload. A strong baseline for the human evaluation is to display the model’s confidence instead of an interpretation.
+
+The tutorial discusses three approaches:
+
+1. Model debugging: Compare how many errors users find in a model with and without the help of  interpretations in a given amount of time. How many of these errors are actionable, i.e. the model developers have an idea how the error might be fixed?
+2. Human-AI collaboration: Let people solve a task and measure how different types of information affects performance: model predictions, confidence scores, n-best predictions and different types of interpretations. It can also be interesting to include human-only performance and AI-only performance in the comparison.
+3. Model imitation: Measure how well people can imitate a model’s predictions after having been exposed to interpretations of predictions of the model, e.g. after having participated in one of the above human evaluations.
+
+
+#### Ideas for New Methods
+
+The tutorial makes suggestions for promising directions and new forms of interpretability:
+
+*   Build interpretability with end users in mind. Build interfaces.
+*   Understand better how well interpretability methods work on new model architectures.
+*   Check to what extent insights from interpretability obtained for one model architecture can be applied to a new architecture.
+*   Adjust interpretability methods to other tasks than classification.
