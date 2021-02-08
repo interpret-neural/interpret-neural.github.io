@@ -41,3 +41,11 @@ kramdown:
   auto_ids: true
   hard_wrap: false
   syntax_highlighter: rouge
+
+# https://jekyllrb.com/docs/configuration/front-matter-defaults/
+defaults:
+  -
+    scope:
+      path: ""  # empty string = apply to all
+    values:
+      image: images/itp-blog-flat-blue-blend-dithered-small-2to1.png
