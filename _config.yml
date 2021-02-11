@@ -49,3 +49,4 @@ defaults:
       path: ""  # empty string = apply to all
     values:
       image: images/itp-blog-flat-blue-blend-dithered-small-2to1.png
+      locale: en_IE
