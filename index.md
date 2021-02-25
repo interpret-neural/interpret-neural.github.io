@@ -7,6 +7,9 @@ SFI Frontiers for the Future Programme
 in the School of Computing
 at Dublin City University.
 
+![Logo](images/itp-blog-flat-blue-blend-dithered-small-2to1.png)
+
+
 ## Topics
 
 This blog will focus on interpretability of neural network models for natural language processing.
