@@ -137,7 +137,7 @@ The performance of a model cannot be predicted from the random seed, at
 least not for a new network configuration.
 (If a network worked well with a seed for task A it may also work well
 for task B, though this is not guaranteed.)
-This makes the random seed hyperparameter fully opaque and limitsi
+This makes the random seed hyperparameter fully opaque and limits
 interpretation to statistics.
 
 Furthermore, the effect of the random seed is tightly coupled to the
